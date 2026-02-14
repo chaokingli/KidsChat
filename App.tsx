@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character, Settings, Message, AppLanguage } from './types';
-import { DEFAULT_CHARACTERS } from './constants';
+import { Character, Settings, Message, AppLanguage, AppTheme } from './types';
+import { DEFAULT_CHARACTERS, THEME_CONFIG } from './constants';
 import { CharacterSelector } from './components/CharacterSelector';
 import { ParentalPortal } from './components/ParentalPortal';
 import { MagicChat } from './components/MagicChat';
@@ -27,7 +27,8 @@ const App: React.FC = () => {
       safeSearchStrict: true,
       timeLimitMinutes: 60,
       remainingTime: 60,
-      language: 'en'
+      language: 'en',
+      theme: 'neutral'
     };
   });
 
@@ -54,6 +55,7 @@ const App: React.FC = () => {
 
   const selectedChar = characters.find(c => c.id === selectedCharId) || characters[0];
   const t = UI_TRANSLATIONS[settings.language];
+  const theme = THEME_CONFIG[settings.theme];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -93,23 +95,23 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col max-w-6xl mx-auto shadow-2xl bg-sky-50/50">
-      <header className="p-4 bg-white border-b border-sky-100 flex items-center justify-between">
+    <div className={`min-h-screen flex flex-col max-w-6xl mx-auto shadow-2xl transition-colors duration-500 bg-${theme.bg}`}>
+      <header className={`p-4 bg-${theme.header} border-b border-${theme.secondary} flex items-center justify-between shadow-sm`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-md rotate-3">
-            <i className="fas fa-book-open text-white text-2xl"></i>
+          <div className={`w-12 h-12 bg-${theme.accent} rounded-2xl flex items-center justify-center shadow-md rotate-3`}>
+            <i className={`fas fa-book-open text-white text-2xl`}></i>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-xl font-black text-sky-900 leading-none">Magic</h1>
-            <p className="text-xs font-bold text-sky-500 uppercase tracking-widest">Encyclopedia</p>
+            <h1 className={`text-xl font-black text-${theme.text} leading-none`}>Magic</h1>
+            <p className={`text-xs font-bold text-${theme.primary} uppercase tracking-widest`}>Encyclopedia</p>
           </div>
         </div>
 
-        <nav className="flex bg-sky-50 p-1.5 rounded-2xl gap-1">
+        <nav className={`flex bg-${theme.secondary} p-1.5 rounded-2xl gap-1`}>
           <button 
             onClick={() => setActiveTab('chat')}
             className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'chat' ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-400 hover:text-sky-600'
+              activeTab === 'chat' ? `bg-white text-${theme.primary} shadow-sm` : `text-${theme.primary} opacity-60 hover:opacity-100`
             }`}
           >
             <i className="fas fa-message sm:mr-2"></i> <span className="hidden sm:inline">{t.chat}</span>
@@ -117,7 +119,7 @@ const App: React.FC = () => {
           <button 
             onClick={() => setActiveTab('characters')}
             className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'characters' ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-400 hover:text-sky-600'
+              activeTab === 'characters' ? `bg-white text-${theme.primary} shadow-sm` : `text-${theme.primary} opacity-60 hover:opacity-100`
             }`}
           >
             <i className="fas fa-paw sm:mr-2"></i> <span className="hidden sm:inline">{t.friends}</span>
@@ -125,7 +127,7 @@ const App: React.FC = () => {
           <button 
             onClick={() => setActiveTab('parents')}
             className={`px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'parents' ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-400 hover:text-sky-600'
+              activeTab === 'parents' ? `bg-white text-${theme.primary} shadow-sm` : `text-${theme.primary} opacity-60 hover:opacity-100`
             }`}
           >
             <i className="fas fa-shield-halved sm:mr-2"></i> <span className="hidden sm:inline">{t.parents}</span>
@@ -133,7 +135,7 @@ const App: React.FC = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-           <div className="bg-sky-100 px-3 py-1.5 rounded-full flex items-center gap-2 text-sky-600 font-bold text-xs">
+           <div className={`bg-${theme.secondary} px-3 py-1.5 rounded-full flex items-center gap-2 text-${theme.primary} font-bold text-xs`}>
               <i className="fas fa-globe"></i>
               {LANGUAGE_LABELS[settings.language]}
            </div>
@@ -162,6 +164,7 @@ const App: React.FC = () => {
               onUpdate={handleUpdateCharacter}
               onDelete={handleDeleteCharacter}
               lang={settings.language}
+              theme={settings.theme}
             />
           </div>
         </div>
@@ -180,7 +183,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="h-1 bg-gradient-to-r from-sky-400 via-yellow-400 to-green-400"></footer>
+      <footer className={`h-1 bg-gradient-to-r from-${theme.primary} via-${theme.accent} to-green-400`}></footer>
     </div>
   );
 };

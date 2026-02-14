@@ -6,6 +6,7 @@ export interface CharacterStyle {
 
 export type GeminiVoice = 'Zephyr' | 'Puck' | 'Charon' | 'Kore' | 'Fenrir';
 export type AppLanguage = 'en' | 'de' | 'zh' | 'ja' | 'fr' | 'es' | 'it';
+export type AppTheme = 'neutral' | 'boy' | 'girl';
 
 export interface Character {
   id: string;
@@ -26,6 +27,7 @@ export interface Settings {
   timeLimitMinutes: number;
   remainingTime: number;
   language: AppLanguage;
+  theme: AppTheme;
 }
 
 export interface Message {

@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Character, GeminiVoice, AppLanguage } from '../types';
+import { Character, GeminiVoice, AppLanguage, AppTheme } from '../types';
 import { checkContentSafety, generateTTS } from '../services/geminiService';
-import { AVAILABLE_VOICES } from '../constants';
+import { AVAILABLE_VOICES, THEME_CONFIG } from '../constants';
 import { decodeBase64, decodeAudioData } from '../services/audioUtils';
 import { UI_TRANSLATIONS } from '../locales';
 
@@ -14,9 +14,10 @@ interface Props {
   onUpdate: (char: Character) => void;
   onDelete: (id: string) => void;
   lang: AppLanguage;
+  theme: AppTheme;
 }
 
-export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onSelect, onAdd, onUpdate, onDelete, lang }) => {
+export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onSelect, onAdd, onUpdate, onDelete, lang, theme: appTheme }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChar, setEditingChar] = useState<Character | null>(null);
   
@@ -32,6 +33,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const t = UI_TRANSLATIONS[lang];
+  const theme = THEME_CONFIG[appTheme];
 
   useEffect(() => {
     if (editingChar) {
@@ -47,7 +49,6 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
     }
   }, [editingChar]);
 
-  // Automatically update the system prompt recommendation as they type persona (only if not manually edited)
   useEffect(() => {
     if (!showAdvanced && newPersona && newName && !editingChar) {
       setNewSystemPrompt(`You are ${newName}, a friendly companion for an 8-year-old child. ${newPersona}. Always be kind, helpful, and use simple language.`);
@@ -101,7 +102,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
       systemPrompt: newSystemPrompt || `You are ${newName}. ${newPersona}`,
       voice: newVoice,
       style: editingChar ? editingChar.style : { tone: 'friendly', length: 'medium' },
-      image: editingChar ? editingChar.image : `https://picsum.photos/seed/${newName}/400/400`,
+      image: editingChar ? editingChar.image : `https://api.dicebear.com/9.x/adventurer/svg?seed=${newName}&backgroundColor=${appTheme === 'girl' ? 'ffd5dc' : 'b6e3f4'}`,
       isDefault: editingChar?.isDefault,
     };
 
@@ -122,14 +123,9 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
     setIsModalOpen(true);
   };
 
-  const openAdd = () => {
-    setEditingChar(null);
-    setIsModalOpen(true);
-  };
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-sky-800 mb-6 flex items-center gap-2">
+      <h2 className={`text-2xl font-bold text-${theme.text} mb-6 flex items-center gap-2`}>
         <i className="fas fa-users"></i> {t.chooseFriend}
       </h2>
 
@@ -140,8 +136,8 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
               onClick={() => onSelect(char.id)}
               className={`w-full relative p-4 rounded-3xl transition-all ${
                 selectedId === char.id 
-                  ? 'bg-sky-400 text-white shadow-lg ring-4 ring-sky-200 scale-105' 
-                  : 'bg-white hover:bg-sky-50 shadow-md border-2 border-transparent'
+                  ? `bg-${theme.primary} text-white shadow-lg ring-4 ring-${theme.secondary} scale-105` 
+                  : 'bg-white hover:bg-opacity-50 shadow-md border-2 border-transparent'
               }`}
             >
               <img 
@@ -150,11 +146,11 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                 className="w-full aspect-square rounded-2xl object-cover mb-3"
               />
               <p className="font-semibold text-center truncate">{char.name}</p>
-              <div className="text-[10px] bg-sky-100 text-sky-600 rounded-full px-2 py-0.5 mt-1 mx-auto w-fit font-bold uppercase">
+              <div className={`text-[10px] bg-${theme.secondary} text-${theme.primary} rounded-full px-2 py-0.5 mt-1 mx-auto w-fit font-bold uppercase`}>
                 {char.voice}
               </div>
               {selectedId === char.id && (
-                <div className="absolute -top-2 -right-2 bg-yellow-400 w-8 h-8 rounded-full flex items-center justify-center text-white border-2 border-white">
+                <div className={`absolute -top-2 -right-2 bg-${theme.accent} w-8 h-8 rounded-full flex items-center justify-center text-white border-2 border-white`}>
                   <i className="fas fa-check"></i>
                 </div>
               )}
@@ -162,7 +158,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
             <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
               <button 
                 onClick={(e) => openEdit(e, char)}
-                className="w-8 h-8 bg-white/90 backdrop-blur rounded-full shadow-md flex items-center justify-center text-sky-500 hover:text-sky-700"
+                className={`w-8 h-8 bg-white/90 backdrop-blur rounded-full shadow-md flex items-center justify-center text-${theme.primary} hover:opacity-80`}
                 title="Edit Friend"
               >
                 <i className="fas fa-pencil text-xs"></i>
@@ -181,10 +177,10 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
         ))}
 
         <button
-          onClick={openAdd}
-          className="p-4 rounded-3xl bg-white border-2 border-dashed border-sky-300 hover:border-sky-500 hover:bg-sky-50 transition-colors flex flex-col items-center justify-center text-sky-500 gap-2 min-h-[180px]"
+          onClick={() => setIsModalOpen(true)}
+          className={`p-4 rounded-3xl bg-white border-2 border-dashed border-${theme.primary} opacity-40 hover:opacity-100 hover:bg-white transition-all flex flex-col items-center justify-center text-${theme.primary} gap-2 min-h-[180px]`}
         >
-          <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center">
+          <div className={`w-12 h-12 rounded-full bg-${theme.secondary} flex items-center justify-center`}>
             <i className="fas fa-plus text-xl"></i>
           </div>
           <p className="font-medium">{t.newFriend}</p>
@@ -194,7 +190,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h3 className="text-xl font-bold text-sky-800 mb-4">
+            <h3 className={`text-xl font-bold text-${theme.text} mb-4`}>
               {editingChar ? `Edit ${editingChar.name}` : t.createFriend}
             </h3>
             <div className="space-y-4">
@@ -204,7 +200,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-sky-100 focus:border-sky-400 outline-none"
+                  className={`w-full px-4 py-2 rounded-xl border-2 border-${theme.secondary} focus:border-${theme.primary} outline-none`}
                 />
               </div>
               <div>
@@ -212,7 +208,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                 <textarea 
                   value={newPersona}
                   onChange={(e) => setNewPersona(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-sky-100 focus:border-sky-400 outline-none min-h-[80px]"
+                  className={`w-full px-4 py-2 rounded-xl border-2 border-${theme.secondary} focus:border-${theme.primary} outline-none min-h-[80px]`}
                 />
               </div>
               
@@ -220,19 +216,19 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                 <button 
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="text-xs font-bold text-sky-500 hover:text-sky-700 flex items-center gap-1 uppercase tracking-wider"
+                  className={`text-xs font-bold text-${theme.primary} hover:opacity-70 flex items-center gap-1 uppercase tracking-wider`}
                 >
                   {showAdvanced ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}
                   Advanced Settings
                 </button>
                 
                 {showAdvanced && (
-                  <div className="mt-3 bg-sky-50 p-4 rounded-2xl border border-sky-100">
-                    <label className="block text-xs font-bold text-sky-700 mb-2 uppercase">Custom Prompt</label>
+                  <div className={`mt-3 bg-${theme.bg} p-4 rounded-2xl border border-${theme.secondary}`}>
+                    <label className={`block text-xs font-bold text-${theme.text} mb-2 uppercase`}>Custom Prompt</label>
                     <textarea 
                       value={newSystemPrompt}
                       onChange={(e) => setNewSystemPrompt(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-sky-200 focus:border-sky-400 outline-none min-h-[100px] text-sm bg-white"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 outline-none min-h-[100px] text-sm bg-white"
                     />
                   </div>
                 )}
@@ -244,7 +240,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                   <select 
                     value={newVoice}
                     onChange={(e) => setNewVoice(e.target.value as GeminiVoice)}
-                    className="flex-1 px-4 py-2 rounded-xl border-2 border-sky-100 focus:border-sky-400 outline-none bg-white font-medium text-sky-700"
+                    className={`flex-1 px-4 py-2 rounded-xl border-2 border-${theme.secondary} focus:border-${theme.primary} outline-none bg-white font-medium text-${theme.text}`}
                   >
                     {AVAILABLE_VOICES.map(v => (
                       <option key={v.name} value={v.name}>{v.name} ({v.description})</option>
@@ -254,7 +250,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                     onClick={handlePreviewVoice}
                     disabled={previewing}
                     className={`w-12 h-10 rounded-xl flex items-center justify-center transition-all ${
-                      previewing ? 'bg-sky-100 text-sky-300' : 'bg-sky-500 text-white hover:bg-sky-600'
+                      previewing ? 'bg-gray-100 text-gray-300' : `bg-${theme.primary} text-white`
                     }`}
                   >
                     <i className={`fas ${previewing ? 'fa-spinner fa-spin' : 'fa-volume-up'}`}></i>
@@ -272,7 +268,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
                 <button 
                   onClick={handleSave}
                   disabled={loading || !newName || !newPersona}
-                  className="flex-1 py-3 rounded-2xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors disabled:opacity-50"
+                  className={`flex-1 py-3 rounded-2xl bg-${theme.primary} text-white font-bold hover:opacity-90 transition-all disabled:opacity-50`}
                 >
                   {loading ? <i className="fas fa-spinner fa-spin mr-2"></i> : (editingChar ? 'Save Changes' : t.create)}
                 </button>

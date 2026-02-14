@@ -30,7 +30,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "Pick a Voice",
     cancel: "Cancel",
     create: "Create!",
-    language: "Language"
+    language: "Language",
+    theme: "Theme",
+    themeNeutral: "Neutral",
+    themeBoy: "Boy",
+    themeGirl: "Girl"
   },
   de: {
     chat: "Chat",
@@ -60,7 +64,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "Stimme wählen",
     cancel: "Abbrechen",
     create: "Erstellen!",
-    language: "Sprache"
+    language: "Sprache",
+    theme: "Design",
+    themeNeutral: "Neutral",
+    themeBoy: "Junge",
+    themeGirl: "Mädchen"
   },
   zh: {
     chat: "聊天",
@@ -90,7 +98,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "选择声音",
     cancel: "取消",
     create: "创建！",
-    language: "语言"
+    language: "语言",
+    theme: "主题风格",
+    themeNeutral: "中性",
+    themeBoy: "小男孩",
+    themeGirl: "小女孩"
   },
   ja: {
     chat: "チャット",
@@ -120,7 +132,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "こえをえらぶ",
     cancel: "キャンセル",
     create: "作る！",
-    language: "言語"
+    language: "言語",
+    theme: "テーマ",
+    themeNeutral: "ニュートラル",
+    themeBoy: "男の子",
+    themeGirl: "女の子"
   },
   fr: {
     chat: "Chat",
@@ -150,7 +166,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "Choisir une voix",
     cancel: "Annuler",
     create: "Créer !",
-    language: "Langue"
+    language: "Langue",
+    theme: "Thème",
+    themeNeutral: "Neutre",
+    themeBoy: "Garçon",
+    themeGirl: "Fille"
   },
   es: {
     chat: "Chat",
@@ -180,7 +200,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "Elige una voz",
     cancel: "Cancelar",
     create: "¡Crear!",
-    language: "Idioma"
+    language: "Idioma",
+    theme: "Tema",
+    themeNeutral: "Neutral",
+    themeBoy: "Niño",
+    themeGirl: "Niña"
   },
   it: {
     chat: "Chat",
@@ -210,7 +234,11 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     pickVoice: "Scegli una voce",
     cancel: "Annulla",
     create: "Crea!",
-    language: "Lingua"
+    language: "Lingua",
+    theme: "Tema",
+    themeNeutral: "Neutrale",
+    themeBoy: "Ragazzo",
+    themeGirl: "Ragazza"
   }
 };
 
