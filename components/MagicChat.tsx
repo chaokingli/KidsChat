@@ -1,0 +1,245 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Character, Message, Settings } from '../types';
+import { getEncyclopediaAnswer, generateTTS } from '../services/geminiService';
+import { decodeBase64, decodeAudioData } from '../services/audioUtils';
+import { UI_TRANSLATIONS } from '../locales';
+
+interface Props {
+  character: Character;
+  settings: Settings;
+  history: Message[];
+  onAddMessage: (msg: Message) => void;
+}
+
+export const MagicChat: React.FC<Props> = ({ character, settings, history, onAddMessage }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const t = UI_TRANSLATIONS[settings.language];
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history, isTyping]);
+
+  const stopCurrentAudio = () => {
+    if (currentSourceRef.current) {
+      try {
+        currentSourceRef.current.stop();
+      } catch (e) {}
+      currentSourceRef.current = null;
+    }
+    setIsSpeaking(false);
+  };
+
+  const playTTS = async (text: string) => {
+    stopCurrentAudio();
+    const base64Audio = await generateTTS(text, character.voice, settings.language);
+    if (!base64Audio) return;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    }
+    const ctx = audioContextRef.current;
+
+    try {
+      const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      source.onended = () => {
+        setIsSpeaking(false);
+        currentSourceRef.current = null;
+      };
+      currentSourceRef.current = source;
+      setIsSpeaking(true);
+      source.start();
+    } catch (err) {
+      console.error("Audio playback error", err);
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleSend = async (text?: string) => {
+    const content = text || inputValue;
+    if (!content.trim()) return;
+
+    stopCurrentAudio();
+
+    const userMsg: Message = { 
+      role: 'user', 
+      content, 
+      timestamp: Date.now(),
+      characterId: character.id 
+    };
+    onAddMessage(userMsg);
+    setInputValue('');
+    setIsTyping(true);
+
+    const response = await getEncyclopediaAnswer(
+      content, 
+      character.systemPrompt, 
+      settings.searchEnabled,
+      settings.language
+    );
+
+    const responseText = response.text || "I'm sorry, I couldn't find an answer to that.";
+    const aiMsg: Message = { 
+      role: 'assistant', 
+      content: responseText, 
+      timestamp: Date.now(),
+      characterId: character.id
+    };
+    onAddMessage(aiMsg);
+    setIsTyping(false);
+    
+    playTTS(responseText);
+  };
+
+  const simulateVoiceInput = () => {
+    if (isListening) return;
+    setIsListening(true);
+    // Simple logic for default query based on language
+    const defaultQueries: any = {
+      en: "Why is the sky blue?",
+      de: "Warum ist der Himmel blau?",
+      zh: "天空为什么是蓝色的？",
+      ja: "空はなぜ青いの？",
+      fr: "Pourquoi le ciel est-il bleu ?",
+      es: "¿Por qué el cielo es azul?",
+      it: "Perché il cielo è blu?"
+    };
+    setTimeout(() => {
+      setIsListening(false);
+      handleSend(defaultQueries[settings.language] || "Hello!");
+    }, 2000);
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-160px)] max-w-4xl mx-auto">
+      <div className="flex items-center gap-4 bg-white/80 backdrop-blur p-4 rounded-3xl shadow-sm mb-4 border border-sky-100">
+        <div className="relative">
+          <img src={character.image} className="w-14 h-14 rounded-full ring-2 ring-sky-300" />
+          {isSpeaking && (
+            <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+              <span className="flex gap-0.5">
+                <span className="w-1 h-2 bg-white rounded-full animate-pulse"></span>
+                <span className="w-1 h-3 bg-white rounded-full animate-pulse [animation-delay:0.2s]"></span>
+                <span className="w-1 h-2 bg-white rounded-full animate-pulse [animation-delay:0.4s]"></span>
+              </span>
+            </div>
+          )}
+        </div>
+        <div>
+          <h3 className="font-bold text-sky-900">{character.name}</h3>
+          <p className="text-xs text-sky-600 font-medium">{isSpeaking ? t.speaking : t.ready}</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {isSpeaking && (
+            <button 
+              onClick={stopCurrentAudio}
+              className="p-2 text-red-400 hover:text-red-600 transition-colors"
+              title="Stop"
+            >
+              <i className="fas fa-volume-xmark"></i>
+            </button>
+          )}
+          <div className="flex items-center gap-2 px-4 py-2 bg-sky-100 rounded-full">
+            <i className="fas fa-clock text-sky-500"></i>
+            <span className="font-bold text-sky-700">{settings.remainingTime}{t.mins}</span>
+          </div>
+        </div>
+      </div>
+
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto space-y-4 px-2 pb-6 scrollbar-hide"
+      >
+        {history.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 space-y-4">
+             <div className="w-32 h-32 bg-sky-100 rounded-full flex items-center justify-center bubble-anim">
+                <i className="fas fa-magic text-5xl text-sky-400"></i>
+             </div>
+             <div>
+                <h2 className="text-xl font-bold text-sky-800">{t.hi}</h2>
+                <p className="text-sky-600">{t.intro(character.name)}</p>
+             </div>
+          </div>
+        )}
+
+        {history.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`group relative max-w-[85%] p-4 rounded-2xl shadow-sm ${
+              msg.role === 'user' 
+                ? 'bg-sky-500 text-white rounded-br-none' 
+                : 'bg-white text-gray-800 rounded-bl-none border-b-2 border-gray-100'
+            }`}>
+              {msg.content}
+              {msg.role === 'assistant' && (
+                <button 
+                  onClick={() => playTTS(msg.content)}
+                  className="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-sky-400 hover:text-sky-600"
+                >
+                  <i className="fas fa-volume-up"></i>
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border-b-2 border-gray-100 flex gap-1">
+              <span className="w-2 h-2 bg-sky-200 rounded-full animate-bounce"></span>
+              <span className="w-2 h-2 bg-sky-300 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+              <span className="w-2 h-2 bg-sky-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="relative pt-4">
+        {isListening && (
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-6 py-2 rounded-full shadow-lg animate-pulse">
+            Listening... 👂
+          </div>
+        )}
+        
+        <div className="bg-white rounded-full shadow-xl p-2 flex items-center gap-2 ring-4 ring-sky-50">
+          <button 
+            onClick={simulateVoiceInput}
+            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+              isListening ? 'bg-red-500 animate-pulse' : 'bg-sky-500 hover:bg-sky-600'
+            } text-white shadow-lg`}
+          >
+            <i className={`fas ${isListening ? 'fa-microphone' : 'fa-microphone-lines'} text-xl`}></i>
+          </button>
+          
+          <input 
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder={t.typePlaceholder}
+            className="flex-1 bg-transparent border-none outline-none px-4 font-medium text-lg placeholder:text-gray-300"
+          />
+          
+          <button 
+            onClick={() => handleSend()}
+            disabled={!inputValue.trim() || isTyping}
+            className="w-12 h-12 bg-sky-100 text-sky-600 rounded-full hover:bg-sky-200 transition-colors disabled:opacity-50"
+          >
+            {isTyping ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

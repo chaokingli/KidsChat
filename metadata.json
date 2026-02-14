@@ -1,0 +1,7 @@
+{
+  "name": "Magic Encyclopedia AI",
+  "description": "A safe, intelligent, and friendly AI companion for kids to explore the world's knowledge through voice and visual interactions.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
