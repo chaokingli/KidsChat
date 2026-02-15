@@ -35,4 +35,5 @@ export interface Message {
   content: string;
   timestamp: number;
   characterId: string;
+  imageUrl?: string; // Added for image display
 }

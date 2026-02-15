@@ -18,6 +18,7 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false); // New state for image generation
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -29,7 +30,7 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [history, isTyping]);
+  }, [history, isTyping, isGeneratingImage]); // Add isGeneratingImage to trigger scroll on image completion
 
   const stopCurrentAudio = () => {
     if (currentSourceRef.current) {
@@ -84,12 +85,21 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
     onAddMessage(userMsg);
     setInputValue('');
     setIsTyping(true);
+    setIsGeneratingImage(false); // Reset image generation state
+
+    const imageRequestKeywords = ['show me a picture of', 'draw a picture of', 'image of', 'picture of'];
+    const isExplicitImageRequest = imageRequestKeywords.some(keyword => content.toLowerCase().includes(keyword));
+
+    if (isExplicitImageRequest) {
+      setIsGeneratingImage(true); // Set loading for image generation
+    }
 
     const response = await getEncyclopediaAnswer(
       content, 
       character.systemPrompt, 
       settings.searchEnabled,
-      settings.language
+      settings.language,
+      settings.theme // Pass theme to potentially influence image generation later
     );
 
     const responseText = response.text || "I'm sorry, I couldn't find an answer to that.";
@@ -97,10 +107,12 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
       role: 'assistant', 
       content: responseText, 
       timestamp: Date.now(),
-      characterId: character.id
+      characterId: character.id,
+      imageUrl: response.imageUrl // Include imageUrl if present
     };
     onAddMessage(aiMsg);
     setIsTyping(false);
+    setIsGeneratingImage(false); // Clear loading for image generation
     
     playTTS(responseText);
   };
@@ -183,6 +195,11 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
                 : 'bg-white text-gray-800 rounded-bl-none border-b-2 border-gray-100'
             }`}>
               {msg.content}
+              {msg.imageUrl && (
+                <div className="mt-3 rounded-xl overflow-hidden shadow-md border border-gray-100">
+                  <img src={msg.imageUrl} alt="Generated content" className="w-full h-auto object-cover" />
+                </div>
+              )}
               {msg.role === 'assistant' && (
                 <button 
                   onClick={() => playTTS(msg.content)}
@@ -201,6 +218,15 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
               <span className={`w-2 h-2 bg-${theme.primary} opacity-20 rounded-full animate-bounce`}></span>
               <span className={`w-2 h-2 bg-${theme.primary} opacity-40 rounded-full animate-bounce [animation-delay:0.2s]`}></span>
               <span className={`w-2 h-2 bg-${theme.primary} opacity-60 rounded-full animate-bounce [animation-delay:0.4s]`}></span>
+            </div>
+          </div>
+        )}
+
+        {isGeneratingImage && (
+          <div className="flex justify-start">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border-b-2 border-gray-100 flex items-center gap-3">
+              <div className={`w-6 h-6 border-2 border-dashed border-${theme.primary} rounded-full animate-spin`}></div>
+              <span className="text-gray-600">Generating image...</span>
             </div>
           </div>
         )}
@@ -234,10 +260,10 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
           
           <button 
             onClick={() => handleSend()}
-            disabled={!inputValue.trim() || isTyping}
+            disabled={!inputValue.trim() || isTyping || isGeneratingImage}
             className={`w-12 h-12 bg-${theme.secondary} text-${theme.primary} rounded-full hover:bg-opacity-80 transition-colors disabled:opacity-50`}
           >
-            {isTyping ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
+            {isTyping || isGeneratingImage ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
           </button>
         </div>
       </div>
