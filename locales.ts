@@ -43,7 +43,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "Custom (OpenAI Compatible)",
     voiceProvider: "Voice AI Provider",
     customTtsModel: "TTS Model",
-    customTtsVoice: "Voice Name"
+    customTtsVoice: "Voice Name",
+    conversations: "Conversations"
   },
   zh: {
     chat: "聊天",
@@ -86,7 +87,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "自定义 (兼容 OpenAI)",
     voiceProvider: "语音 AI 服务商",
     customTtsModel: "语音模型",
-    customTtsVoice: "声音名称"
+    customTtsVoice: "声音名称",
+    conversations: "历史对话"
   },
   de: {
     chat: "Chat",
@@ -129,7 +131,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "Benutzerdefiniert (OpenAI-kompatibel)",
     voiceProvider: "Sprach-KI-Anbieter",
     customTtsModel: "TTS-Modell",
-    customTtsVoice: "Stimmenname"
+    customTtsVoice: "Stimmenname",
+    conversations: "Gespräche"
   },
   ja: {
     chat: "チャット",
@@ -172,7 +175,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "カスタム (OpenAI互換)",
     voiceProvider: "音声AIプロバイダー",
     customTtsModel: "TTSモデル",
-    customTtsVoice: "ボイス名"
+    customTtsVoice: "ボイス名",
+    conversations: "履歴"
   },
   fr: {
     chat: "Chat",
@@ -215,7 +219,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "Personnalisé (Compatible OpenAI)",
     voiceProvider: "Fournisseur de voix IA",
     customTtsModel: "Modèle TTS",
-    customTtsVoice: "Nom de la voix"
+    customTtsVoice: "Nom de la voix",
+    conversations: "Conversations"
   },
   es: {
     chat: "Chat",
@@ -258,7 +263,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "Personalizado (Compatible con OpenAI)",
     voiceProvider: "Proveedor de voz IA",
     customTtsModel: "Modelo TTS",
-    customTtsVoice: "Nombre de voz"
+    customTtsVoice: "Nombre de voz",
+    conversations: "Conversaciones"
   },
   it: {
     chat: "Chat",
@@ -301,7 +307,8 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     providerCustom: "Personalizzato (Compatibile OpenAI)",
     voiceProvider: "Provider Voce AI",
     customTtsModel: "Modello TTS",
-    customTtsVoice: "Nome voce"
+    customTtsVoice: "Nome voce",
+    conversations: "Conversazioni"
   }
 };
 
