@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SYSTEM_SAFETY_RULES } from "../constants";
-import { AppLanguage, AppTheme } from "../types";
+import { AppLanguage, Settings } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
@@ -47,10 +47,6 @@ export const checkContentSafety = async (text: string): Promise<{ safe: boolean;
   }
 };
 
-/**
- * Generates an image based on a text prompt.
- * Uses the gemini-2.5-flash-image model.
- */
 export const generateImage = async (prompt: string): Promise<string | undefined> => {
   const modelToUse = 'gemini-2.5-flash-image'; 
 
@@ -64,7 +60,7 @@ export const generateImage = async (prompt: string): Promise<string | undefined>
       },
       config: {
         imageConfig: {
-          aspectRatio: "1:1", // Default to square images for consistency
+          aspectRatio: "1:1",
         },
       },
     });
@@ -81,19 +77,46 @@ export const generateImage = async (prompt: string): Promise<string | undefined>
   }
 };
 
+const callCustomApi = async (query: string, systemPrompt: string, settings: Settings) => {
+  if (!settings.customApiUrl || !settings.customApiKey) {
+    throw new Error("Custom API settings incomplete");
+  }
 
-export const getEncyclopediaAnswer = async (query: string, characterPrompt: string, useSearch: boolean, lang: AppLanguage, theme: AppTheme) => {
-  const tools = useSearch ? [{ googleSearch: {} }] : [];
+  const response = await fetch(`${settings.customApiUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${settings.customApiKey}`
+    },
+    body: JSON.stringify({
+      model: settings.customModelName || 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: query }
+      ],
+      temperature: 0.7
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Custom API error: ${err}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+};
+
+export const getEncyclopediaAnswer = async (query: string, characterPrompt: string, settings: Settings) => {
+  const lang = settings.language;
+  const useSearch = settings.searchEnabled;
   const languageContext = `IMPORTANT: You must respond in ${getLanguageName(lang)}. You are speaking to an 8-year-old child.`;
+  const fullSystemPrompt = `${SYSTEM_SAFETY_RULES}\n${languageContext}\n${characterPrompt}`;
   
   const isImageRequest = (q: string) => {
     const lowerQuery = q.toLowerCase();
-    return lowerQuery.includes('show me a picture of') ||
-           lowerQuery.includes('show a picture of') ||
-           lowerQuery.includes('draw a picture of') ||
-           lowerQuery.includes('can you draw') ||
-           lowerQuery.includes('image of') ||
-           lowerQuery.includes('picture of');
+    const keywords = ['show me a picture of', 'show a picture of', 'draw a picture of', 'can you draw', 'image of', 'picture of'];
+    return keywords.some(k => lowerQuery.includes(k));
   };
 
   let assistantText = '';
@@ -101,7 +124,6 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
   let sources: any[] = [];
 
   if (isImageRequest(query)) {
-    // Extract the part of the query that describes the image
     const imagePromptMatch = query.match(/(?:show me a picture of|show a picture of|draw a picture of|can you draw|image of|picture of)\s*(.*)/i);
     const imagePrompt = imagePromptMatch && imagePromptMatch[1] ? imagePromptMatch[1].trim() : query.replace(/show me a|show a|draw a|can you|image|picture/i, '').trim();
 
@@ -116,19 +138,24 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
     }
   } else {
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: query,
-        config: {
-          systemInstruction: `${SYSTEM_SAFETY_RULES}\n${languageContext}\n${characterPrompt}`,
-          tools: tools as any
-        }
-      });
-      assistantText = response.text || "Oh oh! I couldn't find that out right now.";
-      sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      if (settings.apiProvider === 'custom') {
+        assistantText = await callCustomApi(query, fullSystemPrompt, settings);
+      } else {
+        const tools = useSearch ? [{ googleSearch: {} }] : [];
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: query,
+          config: {
+            systemInstruction: fullSystemPrompt,
+            tools: tools as any
+          }
+        });
+        assistantText = response.text || "Oh oh! I couldn't find that out right now.";
+        sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      }
     } catch (err) {
       console.error("Text generation failed", err);
-      assistantText = "Oh oh! I couldn't find that out right now.";
+      assistantText = "Oh oh! My magic brain is a bit tired. Can you ask again in a moment?";
     }
   }
 
@@ -140,19 +167,47 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
 };
 
 /**
- * Generates speech using the Gemini TTS model.
- * It uses a system instruction to ensure the speech is natural for the target language 
- * and maintains a child-friendly persona.
+ * Generates speech. Supports Gemini (PCM) or OpenAI-compatible (Standard File) providers.
  */
-export const generateTTS = async (text: string, voiceName: string, lang: AppLanguage = 'en'): Promise<string | undefined> => {
+export const generateTTS = async (text: string, voiceName: string, settings: Settings): Promise<{ data: string | ArrayBuffer; type: 'pcm' | 'file' } | undefined> => {
+  const lang = settings.language;
   const langName = getLanguageName(lang);
-  
+
+  if (settings.voiceProvider === 'custom') {
+    if (!settings.customTtsUrl || !settings.customTtsApiKey) {
+      console.warn("Custom TTS settings missing");
+      return undefined;
+    }
+
+    try {
+      const response = await fetch(`${settings.customTtsUrl}/audio/speech`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${settings.customTtsApiKey}`
+        },
+        body: JSON.stringify({
+          model: settings.customTtsModel || 'tts-1',
+          input: text,
+          voice: settings.customTtsVoice || 'alloy',
+        })
+      });
+
+      if (!response.ok) throw new Error("Custom TTS API failed");
+      const buffer = await response.arrayBuffer();
+      return { data: buffer, type: 'file' };
+    } catch (err) {
+      console.error("Custom TTS generation failed", err);
+      return undefined;
+    }
+  }
+
+  // Default: Gemini
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
       config: {
-        // We use system instruction to guide the TTS model's performance beyond just the text.
         systemInstruction: `You are a high-quality multilingual speech engine for children. 
         Please read the text provided in ${langName}. 
         The audience is an 8-year-old child, so speak clearly, warmly, and naturally.
@@ -160,16 +215,16 @@ export const generateTTS = async (text: string, voiceName: string, lang: AppLang
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // These voices (Zephyr, Puck, etc.) are cross-lingual and will adapt to the language specified in the prompt/instruction.
             prebuiltVoiceConfig: { voiceName: voiceName as any },
           },
         },
       },
     });
 
-    return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    const b64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    return b64 ? { data: b64, type: 'pcm' } : undefined;
   } catch (err) {
-    console.error("TTS generation failed", err);
+    console.error("Gemini TTS generation failed", err);
     return undefined;
   }
 };

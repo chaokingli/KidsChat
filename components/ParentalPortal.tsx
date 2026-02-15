@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, Message, Character, AppLanguage, AppTheme } from '../types';
+import { Settings, Message, Character, AppLanguage, AppTheme, ApiProvider } from '../types';
 import { UI_TRANSLATIONS, LANGUAGE_LABELS } from '../locales';
 import { THEME_CONFIG } from '../constants';
 
@@ -71,7 +71,7 @@ export const ParentalPortal: React.FC<Props> = ({ settings, onUpdate, history, c
       </div>
 
       <div className="space-y-12">
-        {/* Settings Section */}
+        {/* Core Settings */}
         <section className="space-y-6">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
             <div>
@@ -110,15 +110,151 @@ export const ParentalPortal: React.FC<Props> = ({ settings, onUpdate, history, c
               ))}
             </div>
           </div>
+        </section>
 
+        {/* Text AI Provider Settings */}
+        <section className="space-y-6 pt-8 border-t border-gray-100">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <i className={`fas fa-robot text-${theme.primary}`}></i> {t.aiProvider}
+          </h3>
+
+          <div className="grid grid-cols-2 gap-3">
+            {(['google', 'custom'] as ApiProvider[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => onUpdate({ ...settings, apiProvider: p })}
+                className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                  settings.apiProvider === p 
+                    ? `border-${theme.primary} bg-${theme.bg}/50` 
+                    : 'border-gray-100 bg-white opacity-60'
+                }`}
+              >
+                <div className={`font-bold ${settings.apiProvider === p ? `text-${theme.primary}` : 'text-gray-600'}`}>
+                  {p === 'google' ? t.providerGoogle : t.providerCustom}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {settings.apiProvider === 'custom' && (
+            <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">{t.customApiUrl}</label>
+                <input 
+                  type="text"
+                  placeholder="https://api.openai.com/v1"
+                  value={settings.customApiUrl || ''}
+                  onChange={(e) => onUpdate({ ...settings, customApiUrl: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">{t.customApiKey}</label>
+                <input 
+                  type="password"
+                  placeholder="sk-..."
+                  value={settings.customApiKey || ''}
+                  onChange={(e) => onUpdate({ ...settings, customApiKey: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">{t.customModel}</label>
+                <input 
+                  type="text"
+                  placeholder="gpt-4o"
+                  value={settings.customModelName || ''}
+                  onChange={(e) => onUpdate({ ...settings, customModelName: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Voice AI Provider Settings */}
+        <section className="space-y-6 pt-8 border-t border-gray-100">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <i className={`fas fa-volume-up text-${theme.primary}`}></i> {t.voiceProvider}
+          </h3>
+
+          <div className="grid grid-cols-2 gap-3">
+            {(['google', 'custom'] as ApiProvider[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => onUpdate({ ...settings, voiceProvider: p })}
+                className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                  settings.voiceProvider === p 
+                    ? `border-${theme.primary} bg-${theme.bg}/50` 
+                    : 'border-gray-100 bg-white opacity-60'
+                }`}
+              >
+                <div className={`font-bold ${settings.voiceProvider === p ? `text-${theme.primary}` : 'text-gray-600'}`}>
+                  {p === 'google' ? t.providerGoogle : t.providerCustom}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {settings.voiceProvider === 'custom' && (
+            <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">{t.customApiUrl}</label>
+                <input 
+                  type="text"
+                  placeholder="https://api.openai.com/v1"
+                  value={settings.customTtsUrl || ''}
+                  onChange={(e) => onUpdate({ ...settings, customTtsUrl: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">{t.customApiKey}</label>
+                <input 
+                  type="password"
+                  placeholder="sk-..."
+                  value={settings.customTtsApiKey || ''}
+                  onChange={(e) => onUpdate({ ...settings, customTtsApiKey: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-1">{t.customTtsModel}</label>
+                  <input 
+                    type="text"
+                    placeholder="tts-1"
+                    value={settings.customTtsModel || ''}
+                    onChange={(e) => onUpdate({ ...settings, customTtsModel: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-1">{t.customTtsVoice}</label>
+                  <input 
+                    type="text"
+                    placeholder="alloy"
+                    value={settings.customTtsVoice || ''}
+                    onChange={(e) => onUpdate({ ...settings, customTtsVoice: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Safety & Time Limits */}
+        <section className="space-y-6 pt-8 border-t border-gray-100">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
             <div>
               <h3 className="font-bold text-gray-700">{t.internetSearch}</h3>
               <p className="text-sm text-gray-500">{t.searchDesc}</p>
             </div>
             <button 
+              disabled={settings.apiProvider === 'custom'}
               onClick={() => onUpdate({ ...settings, searchEnabled: !settings.searchEnabled })}
-              className={`w-14 h-8 rounded-full relative transition-colors ${settings.searchEnabled ? 'bg-green-400' : 'bg-gray-300'}`}
+              className={`w-14 h-8 rounded-full relative transition-colors ${settings.searchEnabled ? 'bg-green-400' : 'bg-gray-300'} ${settings.apiProvider === 'custom' ? 'opacity-30' : ''}`}
             >
               <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${settings.searchEnabled ? 'right-1' : 'left-1'}`}></div>
             </button>
@@ -139,18 +275,9 @@ export const ParentalPortal: React.FC<Props> = ({ settings, onUpdate, history, c
               <span className={`font-bold text-${theme.primary} min-w-[80px] text-right`}>{settings.timeLimitMinutes} {t.mins}</span>
             </div>
           </div>
-
-          <div className={`p-4 border-2 border-${theme.secondary} rounded-2xl bg-${theme.bg}/30`}>
-            <h3 className={`font-bold text-${theme.text} mb-2 flex items-center gap-2`}>
-              <i className="fas fa-info-circle"></i> {t.usageSummary}
-            </h3>
-            <p className={`text-${theme.text} text-sm opacity-70`}>
-              Total used today: <span className="font-bold">{settings.timeLimitMinutes - settings.remainingTime} {t.mins}</span>
-            </p>
-          </div>
         </section>
 
-        {/* Conversation History Section */}
+        {/* History Management */}
         <section className="space-y-4 pt-8 border-t border-gray-100">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">

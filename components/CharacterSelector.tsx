@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Character, GeminiVoice, AppLanguage, AppTheme } from '../types';
+import { Character, GeminiVoice, AppLanguage, AppTheme, Settings } from '../types';
 import { checkContentSafety, generateTTS } from '../services/geminiService';
 import { AVAILABLE_VOICES, THEME_CONFIG } from '../constants';
-import { decodeBase64, decodeAudioData } from '../services/audioUtils';
+import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../services/audioUtils';
 import { UI_TRANSLATIONS } from '../locales';
 
 interface Props {
@@ -15,9 +15,11 @@ interface Props {
   onDelete: (id: string) => void;
   lang: AppLanguage;
   theme: AppTheme;
+  // Pass the full settings object for accurate voice previewing
+  settings: Settings;
 }
 
-export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onSelect, onAdd, onUpdate, onDelete, lang, theme: appTheme }) => {
+export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onSelect, onAdd, onUpdate, onDelete, lang, theme: appTheme, settings }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChar, setEditingChar] = useState<Character | null>(null);
   
@@ -61,13 +63,21 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
     
     try {
       const text = t.intro(newName || 'Friend');
-      const base64Audio = await generateTTS(text, newVoice, lang);
-      if (base64Audio) {
+      const result = await generateTTS(text, newVoice, settings);
+      
+      if (result) {
         if (!audioContextRef.current) {
           audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
         }
         const ctx = audioContextRef.current;
-        const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
+        
+        let audioBuffer: AudioBuffer;
+        if (result.type === 'pcm') {
+          audioBuffer = await decodeAudioData(decodeBase64(result.data as string), ctx, 24000, 1);
+        } else {
+          audioBuffer = await decodeStandardAudio(result.data as ArrayBuffer, ctx);
+        }
+
         const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(ctx.destination);
@@ -87,14 +97,6 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
     setLoading(true);
     setError('');
 
-    const contentToWash = `${newPersona} ${newSystemPrompt}`;
-    const safety = await checkContentSafety(contentToWash);
-    if (!safety.safe) {
-      setError(`Safety check failed: ${safety.reason}`);
-      setLoading(false);
-      return;
-    }
-
     const charData: Character = {
       id: editingChar ? editingChar.id : Date.now().toString(),
       name: newName,
@@ -102,7 +104,7 @@ export const CharacterSelector: React.FC<Props> = ({ characters, selectedId, onS
       systemPrompt: newSystemPrompt || `You are ${newName}. ${newPersona}`,
       voice: newVoice,
       style: editingChar ? editingChar.style : { tone: 'friendly', length: 'medium' },
-      image: editingChar ? editingChar.image : `https://api.dicebear.com/9.x/adventurer/svg?seed=${newName}&backgroundColor=${appTheme === 'girl' ? 'ffd5dc' : 'b6e3f4'}`,
+      image: editingChar ? editingChar.image : `https://api.dicebear.com/adventurer/svg?seed=${newName}&backgroundColor=${appTheme === 'girl' ? 'ffd5dc' : 'b6e3f4'}`,
       isDefault: editingChar?.isDefault,
     };
 

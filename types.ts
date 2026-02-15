@@ -7,6 +7,7 @@ export interface CharacterStyle {
 export type GeminiVoice = 'Zephyr' | 'Puck' | 'Charon' | 'Kore' | 'Fenrir';
 export type AppLanguage = 'en' | 'de' | 'zh' | 'ja' | 'fr' | 'es' | 'it';
 export type AppTheme = 'neutral' | 'boy' | 'girl';
+export type ApiProvider = 'google' | 'custom';
 
 export interface Character {
   id: string;
@@ -28,6 +29,16 @@ export interface Settings {
   remainingTime: number;
   language: AppLanguage;
   theme: AppTheme;
+  apiProvider: ApiProvider;
+  customApiUrl?: string;
+  customApiKey?: string;
+  customModelName?: string;
+  // Voice Provider Settings
+  voiceProvider: ApiProvider;
+  customTtsUrl?: string;
+  customTtsApiKey?: string;
+  customTtsModel?: string;
+  customTtsVoice?: string;
 }
 
 export interface Message {
@@ -35,5 +46,5 @@ export interface Message {
   content: string;
   timestamp: number;
   characterId: string;
-  imageUrl?: string; // Added for image display
+  imageUrl?: string;
 }

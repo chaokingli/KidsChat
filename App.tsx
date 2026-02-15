@@ -28,7 +28,17 @@ const App: React.FC = () => {
       timeLimitMinutes: 60,
       remainingTime: 60,
       language: 'en',
-      theme: 'neutral'
+      theme: 'neutral',
+      apiProvider: 'google',
+      customApiUrl: 'https://api.openai.com/v1',
+      customApiKey: '',
+      customModelName: 'gpt-4o',
+      // Voice Provider Default
+      voiceProvider: 'google',
+      customTtsUrl: 'https://api.openai.com/v1',
+      customTtsApiKey: '',
+      customTtsModel: 'tts-1',
+      customTtsVoice: 'alloy'
     };
   });
 
@@ -165,6 +175,7 @@ const App: React.FC = () => {
               onDelete={handleDeleteCharacter}
               lang={settings.language}
               theme={settings.theme}
+              settings={settings}
             />
           </div>
         </div>

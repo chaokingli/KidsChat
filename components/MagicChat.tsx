@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Character, Message, Settings } from '../types';
 import { getEncyclopediaAnswer, generateTTS } from '../services/geminiService';
-import { decodeBase64, decodeAudioData } from '../services/audioUtils';
+import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../services/audioUtils';
 import { UI_TRANSLATIONS } from '../locales';
 import { THEME_CONFIG } from '../constants';
 
@@ -18,7 +18,7 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false); // New state for image generation
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -30,7 +30,7 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [history, isTyping, isGeneratingImage]); // Add isGeneratingImage to trigger scroll on image completion
+  }, [history, isTyping, isGeneratingImage]);
 
   const stopCurrentAudio = () => {
     if (currentSourceRef.current) {
@@ -44,8 +44,8 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
 
   const playTTS = async (text: string) => {
     stopCurrentAudio();
-    const base64Audio = await generateTTS(text, character.voice, settings.language);
-    if (!base64Audio) return;
+    const result = await generateTTS(text, character.voice, settings);
+    if (!result) return;
 
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -53,7 +53,13 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
     const ctx = audioContextRef.current;
 
     try {
-      const audioBuffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
+      let audioBuffer: AudioBuffer;
+      if (result.type === 'pcm') {
+        audioBuffer = await decodeAudioData(decodeBase64(result.data as string), ctx, 24000, 1);
+      } else {
+        audioBuffer = await decodeStandardAudio(result.data as ArrayBuffer, ctx);
+      }
+
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(ctx.destination);
@@ -85,21 +91,19 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
     onAddMessage(userMsg);
     setInputValue('');
     setIsTyping(true);
-    setIsGeneratingImage(false); // Reset image generation state
+    setIsGeneratingImage(false);
 
     const imageRequestKeywords = ['show me a picture of', 'draw a picture of', 'image of', 'picture of'];
     const isExplicitImageRequest = imageRequestKeywords.some(keyword => content.toLowerCase().includes(keyword));
 
     if (isExplicitImageRequest) {
-      setIsGeneratingImage(true); // Set loading for image generation
+      setIsGeneratingImage(true);
     }
 
     const response = await getEncyclopediaAnswer(
       content, 
       character.systemPrompt, 
-      settings.searchEnabled,
-      settings.language,
-      settings.theme // Pass theme to potentially influence image generation later
+      settings
     );
 
     const responseText = response.text || "I'm sorry, I couldn't find an answer to that.";
@@ -108,11 +112,11 @@ export const MagicChat: React.FC<Props> = ({ character, settings, history, onAdd
       content: responseText, 
       timestamp: Date.now(),
       characterId: character.id,
-      imageUrl: response.imageUrl // Include imageUrl if present
+      imageUrl: response.imageUrl
     };
     onAddMessage(aiMsg);
     setIsTyping(false);
-    setIsGeneratingImage(false); // Clear loading for image generation
+    setIsGeneratingImage(false);
     
     playTTS(responseText);
   };

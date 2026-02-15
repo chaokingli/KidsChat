@@ -9,6 +9,9 @@ export function decodeBase64(base64: string) {
   return bytes;
 }
 
+/**
+ * Decodes raw PCM data (Int16 format).
+ */
 export async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
@@ -26,6 +29,16 @@ export async function decodeAudioData(
     }
   }
   return buffer;
+}
+
+/**
+ * Decodes standard audio files (MP3, WAV, etc.) from an ArrayBuffer.
+ */
+export async function decodeStandardAudio(
+  buffer: ArrayBuffer,
+  ctx: AudioContext
+): Promise<AudioBuffer> {
+  return await ctx.decodeAudioData(buffer);
 }
 
 export function encodeBase64(bytes: Uint8Array) {
