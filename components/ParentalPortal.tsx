@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Settings, Message, Character, AppLanguage, AppTheme, ApiProvider } from '../types';
 import { UI_TRANSLATIONS, LANGUAGE_LABELS } from '../locales';
-import { THEME_CONFIG } from '../constants';
+import { THEME_CONFIG, GOOGLE_REASONING_MODELS, GOOGLE_TTS_MODELS } from '../constants';
 
 interface Props {
   settings: Settings;
@@ -136,6 +136,37 @@ export const ParentalPortal: React.FC<Props> = ({ settings, onUpdate, history, c
             ))}
           </div>
 
+          {settings.apiProvider === 'google' && (
+            <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">Google API Key (Optional)</label>
+                <input 
+                  type="password"
+                  placeholder="Enter your API Key (Leave blank to use default)"
+                  value={settings.googleApiKey || ''}
+                  onChange={(e) => onUpdate({ ...settings, googleApiKey: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-sky-400 outline-none mb-1"
+                />
+                <p className="text-[10px] text-gray-400">If left blank, the application's built-in key will be used.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">Select Google Model</label>
+                <select 
+                  value={settings.googleModelName}
+                  onChange={(e) => onUpdate({ ...settings, googleModelName: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none bg-white font-medium"
+                >
+                  {GOOGLE_REASONING_MODELS.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-gray-400">
+                  {GOOGLE_REASONING_MODELS.find(m => m.id === settings.googleModelName)?.description}
+                </p>
+              </div>
+            </div>
+          )}
+
           {settings.apiProvider === 'custom' && (
             <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>
               <div>
@@ -195,6 +226,26 @@ export const ParentalPortal: React.FC<Props> = ({ settings, onUpdate, history, c
               </button>
             ))}
           </div>
+
+          {settings.voiceProvider === 'google' && (
+            <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">Select Google TTS Model</label>
+                <select 
+                  value={settings.googleTtsModel}
+                  onChange={(e) => onUpdate({ ...settings, googleTtsModel: e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 outline-none bg-white font-medium"
+                >
+                  {GOOGLE_TTS_MODELS.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-gray-400">
+                  {GOOGLE_TTS_MODELS.find(m => m.id === settings.googleTtsModel)?.description}
+                </p>
+              </div>
+            </div>
+          )}
 
           {settings.voiceProvider === 'custom' && (
             <div className={`p-6 rounded-2xl bg-gray-50 border border-gray-200 space-y-4`}>

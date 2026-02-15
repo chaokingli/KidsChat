@@ -3,7 +3,16 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SYSTEM_SAFETY_RULES } from "../constants";
 import { AppLanguage, Settings } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+/**
+ * Creates a GoogleGenAI instance using the user's provided key 
+ * or falling back to the system environment key.
+ */
+const getGoogleAi = (settings?: Settings) => {
+  const apiKey = (settings?.googleApiKey && settings.googleApiKey.trim() !== '') 
+    ? settings.googleApiKey 
+    : (process.env.API_KEY || '');
+  return new GoogleGenAI({ apiKey });
+};
 
 const getLanguageName = (lang: AppLanguage) => {
   const names: Record<AppLanguage, string> = {
@@ -18,8 +27,9 @@ const getLanguageName = (lang: AppLanguage) => {
   return names[lang];
 };
 
-export const checkContentSafety = async (text: string): Promise<{ safe: boolean; reason?: string }> => {
+export const checkContentSafety = async (text: string, settings?: Settings): Promise<{ safe: boolean; reason?: string }> => {
   try {
+    const ai = getGoogleAi(settings);
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Perform an 8-year-old child safety check on the following character description or message. 
@@ -47,8 +57,9 @@ export const checkContentSafety = async (text: string): Promise<{ safe: boolean;
   }
 };
 
-export const generateImage = async (prompt: string): Promise<string | undefined> => {
+export const generateImage = async (prompt: string, settings?: Settings): Promise<string | undefined> => {
   const modelToUse = 'gemini-2.5-flash-image'; 
+  const ai = getGoogleAi(settings);
 
   try {
     const response = await ai.models.generateContent({
@@ -129,7 +140,7 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
 
     if (imagePrompt) {
       assistantText = `Okay! Here is an image of "${imagePrompt}"!`;
-      generatedImageUrl = await generateImage(imagePrompt);
+      generatedImageUrl = await generateImage(imagePrompt, settings);
       if (!generatedImageUrl) {
         assistantText = `I tried to create an image of "${imagePrompt}", but something went wrong. Could you try a different request?`;
       }
@@ -141,9 +152,10 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
       if (settings.apiProvider === 'custom') {
         assistantText = await callCustomApi(query, fullSystemPrompt, settings);
       } else {
+        const ai = getGoogleAi(settings);
         const tools = useSearch ? [{ googleSearch: {} }] : [];
         const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: settings.googleModelName || 'gemini-3-flash-preview',
           contents: query,
           config: {
             systemInstruction: fullSystemPrompt,
@@ -204,8 +216,9 @@ export const generateTTS = async (text: string, voiceName: string, settings: Set
 
   // Default: Gemini
   try {
+    const ai = getGoogleAi(settings);
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
+      model: settings.googleTtsModel || "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
       config: {
         systemInstruction: `You are a high-quality multilingual speech engine for children. 

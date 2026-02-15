@@ -30,11 +30,14 @@ const App: React.FC = () => {
       language: 'en',
       theme: 'neutral',
       apiProvider: 'google',
+      googleModelName: 'gemini-3-flash-preview',
+      googleApiKey: '', // Default blank uses system key
       customApiUrl: 'https://api.openai.com/v1',
       customApiKey: '',
       customModelName: 'gpt-4o',
       // Voice Provider Default
       voiceProvider: 'google',
+      googleTtsModel: 'gemini-2.5-flash-preview-tts',
       customTtsUrl: 'https://api.openai.com/v1',
       customTtsApiKey: '',
       customTtsModel: 'tts-1',

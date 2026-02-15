@@ -30,11 +30,14 @@ export interface Settings {
   language: AppLanguage;
   theme: AppTheme;
   apiProvider: ApiProvider;
+  googleModelName: string;
+  googleApiKey?: string; // Optional user key for Google
   customApiUrl?: string;
   customApiKey?: string;
   customModelName?: string;
   // Voice Provider Settings
   voiceProvider: ApiProvider;
+  googleTtsModel: string;
   customTtsUrl?: string;
   customTtsApiKey?: string;
   customTtsModel?: string;

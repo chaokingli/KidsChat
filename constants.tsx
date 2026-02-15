@@ -9,6 +9,16 @@ export const AVAILABLE_VOICES: { name: GeminiVoice; description: string }[] = [
   { name: 'Fenrir', description: 'Gentle & Friendly' }
 ];
 
+export const GOOGLE_REASONING_MODELS = [
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Fastest)', description: 'Best for quick answers' },
+  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Smartest)', description: 'Best for complex logic' },
+  { id: 'gemini-2.5-flash-lite-latest', name: 'Gemini 2.5 Flash Lite', description: 'Lightweight and fast' }
+];
+
+export const GOOGLE_TTS_MODELS = [
+  { id: 'gemini-2.5-flash-preview-tts', name: 'Gemini 2.5 TTS (Default)', description: 'High quality speech' }
+];
+
 export const DEFAULT_CHARACTERS: Character[] = [
   {
     id: 'sparky',
