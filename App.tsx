@@ -1,31 +1,29 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Character, Settings, Message, AppLanguage, AppTheme } from './types';
 import { DEFAULT_CHARACTERS, THEME_CONFIG } from './constants';
 import { CharacterSelector } from './components/CharacterSelector';
 import { ParentalPortal } from './components/ParentalPortal';
 import { MagicChat } from './components/MagicChat';
 import { UI_TRANSLATIONS, LANGUAGE_LABELS } from './locales';
+import { safeSave, safeLoad } from './services/storage';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'characters' | 'parents'>('chat');
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [saveIndicatorVisible, setSaveIndicatorVisible] = useState(false);
+  const saveTimeoutRef = useRef<number | null>(null);
   
-  const [characters, setCharacters] = useState<Character[]>(() => {
-    const saved = localStorage.getItem('magic_encyclopedia_characters');
-    if (saved) return JSON.parse(saved);
-    return DEFAULT_CHARACTERS;
-  });
+  const [characters, setCharacters] = useState<Character[]>(() => 
+    safeLoad('magic_encyclopedia_characters', DEFAULT_CHARACTERS)
+  );
   
-  const [selectedCharId, setSelectedCharId] = useState(() => {
-    const saved = localStorage.getItem('magic_encyclopedia_selected_char');
-    return saved || DEFAULT_CHARACTERS[0].id;
-  });
+  const [selectedCharId, setSelectedCharId] = useState(() => 
+    localStorage.getItem('magic_encyclopedia_selected_char') || DEFAULT_CHARACTERS[0].id
+  );
   
-  const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem('magic_encyclopedia_settings');
-    if (saved) return JSON.parse(saved);
-    return {
+  const [settings, setSettings] = useState<Settings>(() => 
+    safeLoad('magic_encyclopedia_settings', {
       searchEnabled: true,
       safeSearchStrict: true,
       timeLimitMinutes: 60,
@@ -44,34 +42,51 @@ const App: React.FC = () => {
       customTtsApiKey: '',
       customTtsModel: 'tts-1',
       customTtsVoice: 'alloy'
-    };
-  });
+    })
+  );
 
-  const [history, setHistory] = useState<Message[]>(() => {
-    const saved = localStorage.getItem('magic_encyclopedia_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [history, setHistory] = useState<Message[]>(() => 
+    safeLoad('magic_encyclopedia_history', [])
+  );
+
+  // Trigger Save Feedback
+  const triggerSaveFeedback = useCallback(() => {
+    setSaveIndicatorVisible(true);
+    if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = window.setTimeout(() => setSaveIndicatorVisible(false), 2000);
+  }, []);
+
+  // Persistent Effects
+  useEffect(() => {
+    const success = safeSave('magic_encyclopedia_history', history);
+    if (!success) {
+      // If full, keep only last 50 messages per character
+      const trimmed = history.slice(-100); 
+      setHistory(trimmed);
+    }
+    triggerSaveFeedback();
+  }, [history, triggerSaveFeedback]);
 
   useEffect(() => {
-    localStorage.setItem('magic_encyclopedia_history', JSON.stringify(history));
-  }, [history]);
+    safeSave('magic_encyclopedia_settings', settings);
+    triggerSaveFeedback();
+  }, [settings, triggerSaveFeedback]);
 
   useEffect(() => {
-    localStorage.setItem('magic_encyclopedia_settings', JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    localStorage.setItem('magic_encyclopedia_characters', JSON.stringify(characters));
-  }, [characters]);
+    safeSave('magic_encyclopedia_characters', characters);
+    triggerSaveFeedback();
+  }, [characters, triggerSaveFeedback]);
 
   useEffect(() => {
     localStorage.setItem('magic_encyclopedia_selected_char', selectedCharId);
-  }, [selectedCharId]);
+    triggerSaveFeedback();
+  }, [selectedCharId, triggerSaveFeedback]);
 
   const selectedChar = characters.find(c => c.id === selectedCharId) || characters[0];
   const t = UI_TRANSLATIONS[settings.language];
   const theme = THEME_CONFIG[settings.theme];
 
+  // Auto-Save Time Limit progress
   useEffect(() => {
     const timer = setInterval(() => {
       setSettings(prev => ({
@@ -151,7 +166,7 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className={`flex flex-col h-full w-full transition-colors duration-500 bg-${theme.bg} overflow-hidden`}>
+    <div className={`flex flex-col h-full w-full transition-colors duration-500 bg-${theme.bg} overflow-hidden font-quicksand`}>
       <header className={`p-3 sm:p-4 bg-${theme.header} border-b border-${theme.secondary} flex items-center justify-between shadow-sm z-30 flex-shrink-0`}>
         <div className="flex items-center gap-2 sm:gap-3">
           <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-${theme.accent} rounded-2xl flex items-center justify-center shadow-md rotate-3`}>
@@ -163,7 +178,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <nav className={`flex bg-${theme.secondary} p-1 rounded-2xl gap-0.5 sm:gap-1`}>
+        <nav className={`flex bg-${theme.secondary} p-1 rounded-2xl gap-0.5 sm:gap-1 relative`}>
           <button 
             onClick={() => setActiveTab('chat')}
             className={`px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
@@ -191,6 +206,10 @@ const App: React.FC = () => {
         </nav>
 
         <div className="flex items-center gap-2">
+           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-300 ${saveIndicatorVisible ? 'bg-green-100 opacity-100 scale-100' : 'bg-transparent opacity-0 scale-95'}`}>
+              <i className="fas fa-cloud-check text-green-500 text-xs"></i>
+              <span className="text-[10px] font-black text-green-600 uppercase tracking-tighter">{t.saved}</span>
+           </div>
            <div className={`bg-${theme.secondary} px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1 sm:gap-2 text-${theme.primary} font-bold text-[10px] sm:text-xs`}>
               <i className="fas fa-globe"></i>
               <span className="hidden sm:inline">{LANGUAGE_LABELS[settings.language]}</span>

@@ -44,7 +44,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "Voice AI Provider",
     customTtsModel: "TTS Model",
     customTtsVoice: "Voice Name",
-    conversations: "Conversations"
+    conversations: "Conversations",
+    saved: "Saved!",
+    storageWarning: "Storage almost full! Pruning old chats."
   },
   zh: {
     chat: "聊天",
@@ -88,7 +90,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "语音 AI 服务商",
     customTtsModel: "语音模型",
     customTtsVoice: "声音名称",
-    conversations: "历史对话"
+    conversations: "历史对话",
+    saved: "已保存！",
+    storageWarning: "空间快满啦！正在清理旧记录。"
   },
   de: {
     chat: "Chat",
@@ -132,7 +136,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "Sprach-KI-Anbieter",
     customTtsModel: "TTS-Modell",
     customTtsVoice: "Stimmenname",
-    conversations: "Gespräche"
+    conversations: "Gespräche",
+    saved: "Gespeichert!",
+    storageWarning: "Speicher fast voll! Bereinige alten Verlauf."
   },
   ja: {
     chat: "チャット",
@@ -176,7 +182,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "音声AIプロバイダー",
     customTtsModel: "TTSモデル",
     customTtsVoice: "ボイス名",
-    conversations: "履歴"
+    conversations: "履歴",
+    saved: "保存済み！",
+    storageWarning: "容量がいっぱいです！古い履歴を整理します。"
   },
   fr: {
     chat: "Chat",
@@ -220,7 +228,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "Fournisseur de voix IA",
     customTtsModel: "Modèle TTS",
     customTtsVoice: "Nom de la voix",
-    conversations: "Conversations"
+    conversations: "Conversations",
+    saved: "Enregistré !",
+    storageWarning: "Stockage presque plein ! Nettoyage en cours."
   },
   es: {
     chat: "Chat",
@@ -264,7 +274,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "Proveedor de voz IA",
     customTtsModel: "Modelo TTS",
     customTtsVoice: "Nombre de voz",
-    conversations: "Conversaciones"
+    conversations: "Conversaciones",
+    saved: "¡Guardado!",
+    storageWarning: "¡Memoria casi llena! Borrando historial antiguo."
   },
   it: {
     chat: "Chat",
@@ -308,7 +320,9 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     voiceProvider: "Provider Voce AI",
     customTtsModel: "Modello TTS",
     customTtsVoice: "Nome voce",
-    conversations: "Conversazioni"
+    conversations: "Conversazioni",
+    saved: "Salvato!",
+    storageWarning: "Memoria quasi piena! Pulizia cronologia."
   }
 };
 
