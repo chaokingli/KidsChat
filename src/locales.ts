@@ -291,7 +291,7 @@ export const UI_TRANSLATIONS: Record<AppLanguage, any> = {
     passwordHint: "Chiedi a mamma o papà la parola magica.",
     unlock: "Sblocca",
     safetyControls: "Controlli di sicurezza",
-    itRicerca: "Ricerca Internet",
+    internetSearch: "Ricerca Internet",
     searchDesc: "Permetti all'IA di cercare fatti recenti",
     timeLimit: "Limite di tempo giornaliero",
     usageSummary: "Riepilogo utilizzo",

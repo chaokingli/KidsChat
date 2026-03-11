@@ -125,6 +125,8 @@ const App: React.FC = () => {
     triggerSaveFeedback();
   };
 
+  const selectedId = selectedCharId;
+
   const CharacterListSidebar = ({ compact = false }: { compact?: boolean }) => (
     <div className={`flex flex-col gap-2 p-4 h-full overflow-y-auto scrollbar-hide`}>
       <h2 className={`text-xs font-black text-${theme.primary} uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2`}>
@@ -165,8 +167,6 @@ const App: React.FC = () => {
       })}
     </div>
   );
-
-  const selectedId = selectedCharId;
 
   return (
     <div className={`flex flex-col h-full w-full transition-colors duration-500 bg-${theme.bg} overflow-hidden font-quicksand`}>
