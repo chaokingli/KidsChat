@@ -53,15 +53,15 @@ const App: React.FC = () => {
   const triggerSaveFeedback = useCallback(() => {
     setSaveIndicatorVisible(true);
     if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = window.setTimeout(() => setSaveIndicatorVisible(false), 2000);
+    saveTimeoutRef.current = window.setTimeout(() => setSaveIndicatorVisible(false), 1500);
   }, []);
 
-  // Persistent Effects
+  // Persistent Effects for Real-time Saving
   useEffect(() => {
     const success = safeSave('magic_encyclopedia_history', history);
-    if (!success) {
-      // If full, keep only last 50 messages per character
-      const trimmed = history.slice(-100); 
+    if (!success && history.length > 50) {
+      // If storage is full, keep only the most recent 50 messages to free up space
+      const trimmed = history.slice(-50); 
       setHistory(trimmed);
     }
     triggerSaveFeedback();
@@ -86,7 +86,7 @@ const App: React.FC = () => {
   const t = UI_TRANSLATIONS[settings.language];
   const theme = THEME_CONFIG[settings.theme];
 
-  // Auto-Save Time Limit progress
+  // Auto-Save Time Limit progress every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setSettings(prev => ({
@@ -122,6 +122,7 @@ const App: React.FC = () => {
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem('magic_encyclopedia_history');
+    triggerSaveFeedback();
   };
 
   const CharacterListSidebar = ({ compact = false }: { compact?: boolean }) => (
@@ -141,8 +142,8 @@ const App: React.FC = () => {
               setActiveTab('chat');
               setIsHistoryDrawerOpen(false);
             }}
-            className={`flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
-              selectedCharId === char.id 
+            className={`flex items-center gap-3 p-3 rounded-2xl transition-all text-left group ${
+              selectedId === char.id 
                 ? `bg-${theme.primary} text-white shadow-lg shadow-${theme.primary}/20 scale-[1.02]` 
                 : `bg-white hover:bg-${theme.secondary} text-gray-700`
             }`}
@@ -164,6 +165,8 @@ const App: React.FC = () => {
       })}
     </div>
   );
+
+  const selectedId = selectedCharId;
 
   return (
     <div className={`flex flex-col h-full w-full transition-colors duration-500 bg-${theme.bg} overflow-hidden font-quicksand`}>
@@ -207,7 +210,7 @@ const App: React.FC = () => {
 
         <div className="flex items-center gap-2">
            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-300 ${saveIndicatorVisible ? 'bg-green-100 opacity-100 scale-100' : 'bg-transparent opacity-0 scale-95'}`}>
-              <i className="fas fa-cloud-check text-green-500 text-xs"></i>
+              <i className="fas fa-cloud-arrow-up text-green-500 text-xs"></i>
               <span className="text-[10px] font-black text-green-600 uppercase tracking-tighter">{t.saved}</span>
            </div>
            <div className={`bg-${theme.secondary} px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1 sm:gap-2 text-${theme.primary} font-bold text-[10px] sm:text-xs`}>
@@ -219,14 +222,12 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 flex overflow-hidden relative">
-        {/* Landscape Sidebar: Visible on Desktop (any width) and Tablet Landscape (md+) */}
         {activeTab === 'chat' && (
           <aside className="hidden md:landscape:flex lg:flex flex-shrink-0 w-64 xl:w-80 bg-white/40 border-r border-gray-100 overflow-hidden flex-col">
             <CharacterListSidebar />
           </aside>
         )}
 
-        {/* Mobile History Drawer: Portrait or Mobile (sm) */}
         {activeTab === 'chat' && isHistoryDrawerOpen && (
           <>
             <div 
@@ -252,7 +253,6 @@ const App: React.FC = () => {
         <div className="flex-1 flex flex-col relative overflow-hidden h-full">
           <div className={`flex-1 h-full transition-all duration-300 ${activeTab === 'chat' ? 'opacity-100 z-10 translate-y-0' : 'opacity-0 z-0 absolute inset-0 pointer-events-none translate-y-4'}`}>
             <div className="p-2 sm:p-4 h-full relative">
-              {/* History Toggle Button: Only in Portrait or Mobile Portrait/Landscape */}
               {activeTab === 'chat' && (
                 <button 
                   onClick={() => setIsHistoryDrawerOpen(true)}

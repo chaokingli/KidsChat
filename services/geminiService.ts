@@ -100,7 +100,7 @@ const callCustomApi = async (query: string, systemPrompt: string, settings: Sett
       'Authorization': `Bearer ${settings.customApiKey}`
     },
     body: JSON.stringify({
-      model: settings.customModelName || 'gpt-3.5-turbo',
+      model: settings.customModelName || 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: query }
@@ -179,7 +179,9 @@ export const getEncyclopediaAnswer = async (query: string, characterPrompt: stri
 };
 
 /**
- * Generates speech. Supports Gemini (PCM) or OpenAI-compatible (Standard File) providers.
+ * Generates speech.
+ * Note: For the TTS model 'gemini-2.5-flash-preview-tts', the request must be simple.
+ * Do not provide systemInstruction in the config.
  */
 export const generateTTS = async (text: string, voiceName: string, settings: Settings): Promise<{ data: string | ArrayBuffer; type: 'pcm' | 'file' } | undefined> => {
   const lang = settings.language;
@@ -187,7 +189,6 @@ export const generateTTS = async (text: string, voiceName: string, settings: Set
 
   if (settings.voiceProvider === 'custom') {
     if (!settings.customTtsUrl || !settings.customTtsApiKey) {
-      console.warn("Custom TTS settings missing");
       return undefined;
     }
 
@@ -217,14 +218,13 @@ export const generateTTS = async (text: string, voiceName: string, settings: Set
   // Default: Gemini
   try {
     const ai = getGoogleAi(settings);
+    // TTS models don't support systemInstruction. We put prosody/language cues in the prompt parts.
+    const prompt = `Read clearly in ${langName}: ${text}`;
+    
     const response = await ai.models.generateContent({
       model: settings.googleTtsModel || "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: text }] }],
+      contents: [{ parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: `You are a high-quality multilingual speech engine for children. 
-        Please read the text provided in ${langName}. 
-        The audience is an 8-year-old child, so speak clearly, warmly, and naturally.
-        Respect the linguistic nuances of ${langName} while keeping the character's energy level consistent with the chosen voice: ${voiceName}.`,
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
