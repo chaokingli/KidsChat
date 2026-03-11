@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Settings, Message, Character, AppLanguage, AppTheme, ApiProvider } from '@/types';
-import { UI_TRANSLATIONS, LANGUAGE_LABELS } from '@/locales';
-import { THEME_CONFIG, GOOGLE_REASONING_MODELS, GOOGLE_TTS_MODELS } from '@/constants';
+import { Settings, Message, Character, AppLanguage, AppTheme, ApiProvider } from '../types';
+import { UI_TRANSLATIONS, LANGUAGE_LABELS } from '../locales';
+import { THEME_CONFIG, GOOGLE_REASONING_MODELS, GOOGLE_TTS_MODELS } from '../constants';
 
 interface Props {
   settings: Settings;

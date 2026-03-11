@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Character, Message, Settings } from '@/types';
-import { getEncyclopediaAnswer, generateTTS } from '@/services/geminiService';
-import { decodeBase64, decodeAudioData, decodeStandardAudio } from '@/services/audioUtils';
-import { UI_TRANSLATIONS } from '@/locales';
-import { THEME_CONFIG } from '@/constants';
+import { Character, Message, Settings } from '../types';
+import { getEncyclopediaAnswer, generateTTS } from '../services/geminiService';
+import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../services/audioUtils';
+import { UI_TRANSLATIONS } from '../locales';
+import { THEME_CONFIG } from '../constants';
 
 interface Props {
   character: Character;
