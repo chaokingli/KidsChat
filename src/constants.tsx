@@ -1,5 +1,5 @@
 
-import { Character, GeminiVoice, AppTheme } from './types';
+import { Character, GeminiVoice, AppTheme } from '@/types';
 
 export const AVAILABLE_VOICES: { name: GeminiVoice; description: string }[] = [
   { name: 'Zephyr', description: 'Energetic & Youthful' },
