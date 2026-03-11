@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { SYSTEM_SAFETY_RULES } from "../constants";
-import { AppLanguage, Settings } from "../types";
+import { SYSTEM_SAFETY_RULES } from "./constants";
+import { AppLanguage, Settings } from "./types";
 
 /**
  * Creates a GoogleGenAI instance using the user's provided key 
