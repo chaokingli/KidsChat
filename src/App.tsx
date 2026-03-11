@@ -6,7 +6,7 @@ import { CharacterSelector } from './components/CharacterSelector';
 import { ParentalPortal } from './components/ParentalPortal';
 import { MagicChat } from './components/MagicChat';
 import { UI_TRANSLATIONS, LANGUAGE_LABELS } from './locales';
-import { safeSave, safeLoad } from './appStorage';
+import { safeSave, safeLoad } from './AppStorage';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'characters' | 'parents'>('chat');
