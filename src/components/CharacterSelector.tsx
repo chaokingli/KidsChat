@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Character, GeminiVoice, AppLanguage, AppTheme, Settings } from '../types';
-import { checkContentSafety, generateTTS } from '../GeminiService';
+import { checkContentSafety, generateTTS } from '../gemini-service';
 import { AVAILABLE_VOICES, THEME_CONFIG } from '../constants';
-import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../AudioUtils';
+import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../audio-utils';
 import { UI_TRANSLATIONS } from '../locales';
 
 interface Props {
