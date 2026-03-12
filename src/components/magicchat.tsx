@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Character, Message, Settings } from '../types';
-import { getEncyclopediaAnswer, generateTTS } from '../logic/gemini-client';
-import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../logic/audio-engine';
+import { getEncyclopediaAnswer, generateTTS } from '../services/gemini';
+import { decodeBase64, decodeAudioData, decodeStandardAudio } from '../services/audio';
 import { UI_TRANSLATIONS } from '../locales';
 import { THEME_CONFIG } from '../constants';
 
