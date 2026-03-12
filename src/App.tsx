@@ -1,4 +1,5 @@
 
+// Version: 3.0.1 - Forced Refresh for Vercel Build
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Character, Settings, Message, AppLanguage, AppTheme } from './types';
 import { DEFAULT_CHARACTERS, THEME_CONFIG } from './constants';
@@ -6,7 +7,7 @@ import { CharacterSelector } from './components/CharacterSelector';
 import { ParentalPortal } from './components/ParentalPortal';
 import { MagicChat } from './components/MagicChat';
 import { UI_TRANSLATIONS, LANGUAGE_LABELS } from './locales';
-import { safeSave, safeLoad } from './services/storage';
+import { safeSave, safeLoad } from './logic/storage-provider';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'characters' | 'parents'>('chat');
